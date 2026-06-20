@@ -1,5 +1,5 @@
 // const BASE_URL = 'http://localhost:5000/api';
-const BASE_URL = 'https://ebook-backend-f78l.onrender.com/';
+const BASE_URL = 'https://ebook-backend-f78l.onrender.com/api';
 
 async function handleResponse(res) {
   if (!res.ok) {
