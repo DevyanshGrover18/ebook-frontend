@@ -1,4 +1,5 @@
-const BASE_URL = 'http://localhost:5000/api';
+// const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://stitch.withgoogle.com/projects/7531510828821899623';
 
 async function handleResponse(res) {
   if (!res.ok) {
