@@ -5,13 +5,13 @@ import { booksService, categoriesService, faqsService } from '../../services/api
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="admin-stat-card">
-      <div className={`admin-stat-icon ${color}`}>
+    <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-800 border border-slate-700/60">
+      <div className={`w-11 h-11 shrink-0 rounded-lg flex items-center justify-center ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
         <p className="text-slate-400 text-sm">{label}</p>
-        <p className="text-white text-2xl font-bold mt-0.5">{value ?? '—'}</p>
+        <p className="text-white text-2xl font-bold mt-0.5 leading-none">{value ?? '—'}</p>
       </div>
     </div>
   );
@@ -49,7 +49,7 @@ function AdminDashboard() {
       </div>
 
       {/* Quick links */}
-      <div className="admin-panel">
+      <div className="p-6 rounded-xl bg-slate-800 border border-slate-700/60">
         <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-amber-400" /> Quick Actions
         </h2>
@@ -63,9 +63,9 @@ function AdminDashboard() {
             <Link
               key={href}
               to={href}
-              className="flex items-center gap-3 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-amber-500/40 transition-all group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-amber-500/40 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
             >
-              <Icon className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
+              <Icon className="w-5 h-5 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
               <span className="text-slate-200 font-medium text-sm">{label}</span>
             </Link>
           ))}

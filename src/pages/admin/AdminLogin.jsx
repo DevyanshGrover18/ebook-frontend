@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext.jsx';
-import { Lock, User, AlertCircle, BookOpen, Shield } from 'lucide-react';
+import { Lock, User, AlertCircle, BookOpen, Scale } from 'lucide-react';
 
 function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -26,37 +26,63 @@ function AdminLogin() {
   };
 
   return (
-    <div className="admin-login-bg min-h-screen flex items-center justify-center p-4">
-      {/* Decorative circles */}
-      <div className="admin-blob admin-blob-1" />
-      <div className="admin-blob admin-blob-2" />
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-[#0B0F1A] overflow-hidden">
+      {/* Faint ruled-ledger background texture */}
+      <div
+        className="absolute inset-0 opacity-[0.05] pointer-events-none"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(to bottom, transparent 0, transparent 27px, #C9A24B 27px, #C9A24B 28px)',
+        }}
+      />
+      {/* Soft vignette behind the card */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 40%, rgba(201,162,75,0.08), transparent 60%)',
+        }}
+      />
 
-      <div className="admin-login-card">
+      <div className="relative z-10 w-full max-w-md bg-[#131826]/90 backdrop-blur-sm border border-[#2A3142] rounded-xl shadow-2xl shadow-black/60 p-8 sm:p-10">
         {/* Logo / Brand */}
         <div className="flex flex-col items-center mb-8">
-          <div className="admin-logo-ring mb-4">
-            <BookOpen className="w-8 h-8 text-amber-400" />
+          <div className="relative mb-4 w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border border-dashed border-[#C9A24B]/30" />
+            <div className="absolute inset-[5px] rounded-full border border-[#C9A24B]/50" />
+            <BookOpen className="w-6 h-6 text-[#C9A24B] relative" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Lexis &amp; Juris</h1>
-          <p className="text-slate-400 text-sm mt-1">Admin Control Panel</p>
+          <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-[#EDEAE2]">
+            Lexis <span className="text-[#C9A24B]">&amp;</span> Juris
+          </h1>
+          <p className="text-[#8891A3] text-[11px] uppercase tracking-[0.2em] mt-2">
+            Admin Control Panel
+          </p>
         </div>
 
         {/* Divider */}
-        <div className="admin-divider mb-8">
-          <Shield className="w-4 h-4 text-amber-400/60" />
-          <span className="text-xs text-slate-500 tracking-widest uppercase">Secure Access</span>
-          <Shield className="w-4 h-4 text-amber-400/60" />
+        <div className="flex items-center gap-3 mb-8">
+          <span className="flex-1 h-px bg-[#2A3142]" />
+          <Scale className="w-3.5 h-3.5 text-[#C9A24B]/70" />
+          <span className="text-[10px] text-[#8891A3] tracking-[0.25em] uppercase whitespace-nowrap">
+            Secure Access
+          </span>
+          <Scale className="w-3.5 h-3.5 text-[#C9A24B]/70" />
+          <span className="flex-1 h-px bg-[#2A3142]" />
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Username */}
           <div>
-            <label htmlFor="admin-username" className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              htmlFor="admin-username"
+              className="block text-[11px] uppercase tracking-[0.15em] font-medium text-[#8891A3] mb-2"
+            >
               Username
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6478]" />
               <input
                 id="admin-username"
                 type="text"
@@ -64,18 +90,22 @@ function AdminLogin() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username"
                 required
-                className="admin-input pl-10"
+                autoComplete="username"
+                className="w-full pl-10 pr-4 py-3 bg-[#0B0F1A]/60 border border-[#2A3142] rounded-md text-[#EDEAE2] placeholder-[#5C6478] focus:outline-none focus:border-[#C9A24B]/60 focus:ring-1 focus:ring-[#C9A24B]/30 transition-colors"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label htmlFor="admin-password" className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              htmlFor="admin-password"
+              className="block text-[11px] uppercase tracking-[0.15em] font-medium text-[#8891A3] mb-2"
+            >
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C6478]" />
               <input
                 id="admin-password"
                 type="password"
@@ -83,14 +113,18 @@ function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
-                className="admin-input pl-10"
+                autoComplete="current-password"
+                className="w-full pl-10 pr-4 py-3 bg-[#0B0F1A]/60 border border-[#2A3142] rounded-md text-[#EDEAE2] placeholder-[#5C6478] focus:outline-none focus:border-[#C9A24B]/60 focus:ring-1 focus:ring-[#C9A24B]/30 transition-colors"
               />
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="admin-error-banner">
+            <div
+              role="alert"
+              className="flex items-center gap-2 bg-[#E2675A]/10 border border-[#E2675A]/30 text-[#E2675A] rounded-md px-4 py-3 text-sm"
+            >
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -101,11 +135,11 @@ function AdminLogin() {
             id="admin-login-submit"
             type="submit"
             disabled={isLoading}
-            className="admin-btn-primary w-full py-3"
+            className="w-full py-3 rounded-md bg-[#C9A24B] hover:bg-[#D9B459] text-[#0B0F1A] font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131826]"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-slate-900/40 border-t-slate-900 rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-[#0B0F1A]/40 border-t-[#0B0F1A] rounded-full animate-spin" />
                 Authenticating…
               </span>
             ) : (
@@ -113,6 +147,10 @@ function AdminLogin() {
             )}
           </button>
         </form>
+
+        <p className="text-center text-[10px] uppercase tracking-[0.2em] text-[#5C6478] mt-8">
+          Authorized personnel only
+        </p>
       </div>
     </div>
   );
