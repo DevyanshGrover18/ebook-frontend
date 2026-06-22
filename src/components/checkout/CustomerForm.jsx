@@ -5,15 +5,16 @@ import { useState } from 'react';
  * Validates on blur; highlights fields with a success ring on valid input
  * and shows inline error text on invalid blur.
  */
-function CustomerForm({ formData, onChange }) {
+function CustomerForm({ formData, onChange, submitAttempted }) {
   const [touched, setTouched] = useState({ fullName: false, email: false });
-  const [errors, setErrors] = useState({ fullName: '', email: '' });
 
   const validate = (name, value) => {
     if (name === 'fullName') {
+      if (!value.trim()) return 'Please fill these fields';
       return value.trim().length < 2 ? 'Please enter your full name.' : '';
     }
     if (name === 'email') {
+      if (!value.trim()) return 'Please fill these fields';
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
         ? ''
         : 'Please enter a valid email address.';
@@ -22,27 +23,30 @@ function CustomerForm({ formData, onChange }) {
   };
 
   const handleBlur = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
-    setErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange(name, value);
-    // Clear error while the user is actively typing
-    if (touched[name]) {
-      setErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
-    }
   };
 
   const getInputClass = (name) => {
     const base =
       'bg-transparent border rounded-xl p-3 outline-none transition-all font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 w-full';
-    if (touched[name] && errors[name]) return `${base} border-error focus:border-error focus:ring-1 focus:ring-error`;
-    if (touched[name] && !errors[name]) return `${base} border-secondary/60 focus:border-secondary focus:ring-1 focus:ring-secondary`;
+    
+    const errorMsg = validate(name, formData[name]);
+    const isError = (touched[name] || submitAttempted) && errorMsg;
+    const isValid = touched[name] && !errorMsg;
+
+    if (isError) return `${base} border-error focus:border-error focus:ring-1 focus:ring-error`;
+    if (isValid) return `${base} border-secondary/60 focus:border-secondary focus:ring-1 focus:ring-secondary`;
     return `${base} border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary`;
   };
+
+  const fullNameError = validate('fullName', formData.fullName);
+  const emailError = validate('email', formData.email);
 
   return (
     <section
@@ -73,9 +77,9 @@ function CustomerForm({ formData, onChange }) {
             onBlur={handleBlur}
             className={getInputClass('fullName')}
           />
-          {touched.fullName && errors.fullName && (
+          {(touched.fullName || submitAttempted) && fullNameError && (
             <p className="text-error font-label-sm text-label-sm px-1" role="alert">
-              {errors.fullName}
+              {fullNameError}
             </p>
           )}
         </div>
@@ -99,11 +103,14 @@ function CustomerForm({ formData, onChange }) {
             onBlur={handleBlur}
             className={getInputClass('email')}
           />
-          {touched.email && errors.email && (
+          {(touched.email || submitAttempted) && emailError && (
             <p className="text-error font-label-sm text-label-sm px-1" role="alert">
-              {errors.email}
+              {emailError}
             </p>
           )}
+          <p className="text-on-surface-variant/70 font-label-sm text-label-sm px-1">
+            you will recieve your book's download link on this email
+          </p>
         </div>
       </div>
     </section>

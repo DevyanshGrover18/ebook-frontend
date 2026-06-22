@@ -12,7 +12,7 @@ function AboutBook({ description, keyFeatures }) {
       aria-labelledby="tab-overview"
       className="py-12"
     >
-      <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop scrollbar-none">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
           {/* Description */}
@@ -27,7 +27,7 @@ function AboutBook({ description, keyFeatures }) {
           <div>
             <h3 className="font-title-lg text-title-lg text-primary mb-6">Key Features</h3>
             <ul className="flex flex-col gap-4">
-              {keyFeatures.map((feature, index) => (
+              {(keyFeatures || []).map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
                   <span className="font-body-md text-body-md text-on-surface-variant">{feature}</span>

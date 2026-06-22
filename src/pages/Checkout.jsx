@@ -22,7 +22,9 @@ function CheckoutPage() {
   const [cartItems, setCartItems] = useState(initialCartItems);
   const [formData, setFormData] = useState({ fullName: '', email: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState('card');
+  const [isBuyNow, setIsBuyNow] = useState(false);
 
   const cartId = 'default-cart';
 
@@ -30,7 +32,7 @@ function CheckoutPage() {
   useEffect(() => {
     const loadCart = async () => {
       try {
-        // If we arrived with a "Buy Now" book in state, add it to the cart first
+        // If we arrived with a "Buy Now" book in state, show it directly without modifying cart
         if (location.state && location.state.book) {
           const b = location.state.book;
           const newItem = {
@@ -44,14 +46,12 @@ function CheckoutPage() {
             imageAlt: b.imageAlt,
           };
 
-          // Clear standard default-cart items first since we want a direct Buy Now checkout
-          await cartService.clear(cartId).catch(() => {});
-
-          // Add our new item to the cart
-          await cartService.addItem(cartId, newItem);
+          setIsBuyNow(true);
+          setCartItems([newItem]);
 
           // Clear history state to avoid re-adding on page refresh
           window.history.replaceState({}, document.title);
+          return;
         }
 
         // Fetch the active cart items
@@ -61,22 +61,6 @@ function CheckoutPage() {
         }
       } catch (err) {
         console.warn('Backend cart fetch failed, using local offline state fallback:', err.message);
-        // Offline state fallback
-        if (location.state && location.state.book) {
-          const b = location.state.book;
-          setCartItems([
-            {
-              id: b.id,
-              title: b.title,
-              author: b.author,
-              format: 'Digital Edition',
-              price: b.price,
-              fileSizeMB: Math.round(b.pages / 20) || 15,
-              image: b.image,
-              imageAlt: b.imageAlt,
-            }
-          ]);
-        }
       }
     };
 
@@ -87,10 +71,12 @@ function CheckoutPage() {
     // Optimistic UI update
     setCartItems((prev) => prev.filter((item) => item.id !== id));
 
-    try {
-      await cartService.removeItem(cartId, id);
-    } catch (err) {
-      console.warn('Failed to delete item from backend cart:', err.message);
+    if (!isBuyNow) {
+      try {
+        await cartService.removeItem(cartId, id);
+      } catch (err) {
+        console.warn('Failed to delete item from backend cart:', err.message);
+      }
     }
   };
 
@@ -99,12 +85,15 @@ function CheckoutPage() {
   };
 
   const handleSubmit = async () => {
-    if (
-      !formData.fullName.trim() ||
-      !formData.email.trim() ||
-      cartItems.length === 0
-    ) {
-      showToast('Please fill in all required checkout details.', 'error');
+    setSubmitAttempted(true);
+
+    if (!formData.fullName.trim() || !formData.email.trim()) {
+      showToast('Please fill these fields', 'error');
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      showToast('Your cart is empty.', 'error');
       return;
     }
 
@@ -143,16 +132,65 @@ function CheckoutPage() {
     };
 
     try {
-      await ordersService.create(payload);
-      await new Promise((resolve) => setTimeout(resolve, 1800));
-      await cartService.clear(cartId).catch(() => {});
-      showToast('Order placed! Your items have been secured.', 'success');
-      setCartItems([]);
-      setFormData({ fullName: '', email: '' });
+      // 1. Create Razorpay order on backend
+      const razorpayOrder = await ordersService.createRazorpayOrder(total);
+
+      // 2. Initialize Razorpay Checkout
+      const options = {
+        key: razorpayOrder.key_id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: "Lexis & Juris Marketplace",
+        description: "Order Payment",
+        order_id: razorpayOrder.id,
+        prefill: {
+          name: formData.fullName.trim(),
+          email: formData.email.trim(),
+          // Automatically pick the payment method from the checkout screen
+          method: selectedPayment === 'upi' ? 'upi' : selectedPayment === 'netbanking' ? 'netbanking' : 'card'
+        },
+        handler: async function (response) {
+          // Add razorpay info to payload
+          payload.paymentId = response.razorpay_payment_id;
+          payload.razorpayOrderId = response.razorpay_order_id;
+          payload.razorpaySignature = response.razorpay_signature;
+
+          try {
+            await ordersService.create(payload);
+            if (!isBuyNow) {
+              await cartService.clear(cartId).catch(() => {});
+            }
+            showToast('Order placed! Your items have been secured.', 'success');
+            setCartItems([]);
+            setFormData({ fullName: '', email: '' });
+            setSubmitAttempted(false);
+          } catch (err) {
+            console.warn('Failed to save order to DB:', err.message);
+            showToast('Payment successful, but failed to save order.', 'error');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            setIsSubmitting(false);
+            showToast('Payment cancelled.', 'error');
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      
+      // If there's an error during initialization
+      rzp.on('payment.failed', function (response){
+        showToast('Payment failed: ' + response.error.description, 'error');
+        setIsSubmitting(false);
+      });
+
+      rzp.open();
     } catch (err) {
-      console.warn('Failed to create order:', err.message);
-      showToast('Order failed. Please try again.', 'error');
-    } finally {
+      console.warn('Razorpay error:', err.message);
+      showToast('Error initiating payment.', 'error');
       setIsSubmitting(false);
     }
   };
@@ -182,7 +220,11 @@ function CheckoutPage() {
             <CartSection items={cartItems} onRemoveItem={handleRemoveItem} />
 
             {/* Customer info form */}
-            <CustomerForm formData={formData} onChange={handleFormChange} />
+            <CustomerForm
+              formData={formData}
+              onChange={handleFormChange}
+              submitAttempted={submitAttempted}
+            />
           </div>
 
           {/* ── Right Column: Sticky Order Summary ── */}

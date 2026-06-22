@@ -3,14 +3,29 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { navLinks } from '../../data/navigation.js';
 import IconButton from '../common/IconButton.jsx';
 import Button from '../common/Button.jsx';
-import { Search } from 'lucide-react';
+import { Search, ChevronRight, ShoppingCart, Menu, X } from 'lucide-react';
+import { categoriesService, booksService } from '../../services/api.js';
+import { books as staticBooks } from '../../data/books.js';
+import SearchDropdownResults from '../common/SearchDropdownResults.jsx';
 
-/**
- * Fixed top navigation bar. `brandName` and `navLinks`/`onSignIn` are props
- * so this same component can be reused across every page.
- */
+const slugify = (text) => {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
 function Header({ brandName = 'Lexis & Juris', links = navLinks, onSignIn }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCats, setIsLoadingCats] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allBooks, setAllBooks] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -20,52 +35,199 @@ function Header({ brandName = 'Lexis & Juris', links = navLinks, onSignIn }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSignInClick = () => {
-    if (typeof onSignIn === 'function') {
-      onSignIn();
-    } else {
-      navigate('/admin');
-    }
-  };
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
+
+  useEffect(() => {
+    categoriesService.getAll()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data.map((c) => c.title).filter(Boolean));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingCats(false));
+  }, []);
+
+  useEffect(() => {
+    booksService.getAll()
+      .then((data) => {
+        if (Array.isArray(data)) setAllBooks(data);
+      })
+      .catch((err) => {
+        console.warn('Header books fetch failed, using local offline seed:', err.message);
+        setAllBooks(staticBooks);
+      });
+  }, []);
+
+  const navItems = isLoadingCats
+    ? links.map((link) => ({ label: link.label, href: link.href, key: link.id }))
+    : categories.map((cat) => ({ label: cat, href: `/books?category=${slugify(cat)}`, key: cat }));
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
-      <div
-        className={`flex items-center justify-between px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto transition-all duration-300 ${
-          isScrolled ? 'py-2' : 'py-4'
-        }`}
-      >
-        <Link to="/" className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tight hover:opacity-90 transition-opacity">
-          {brandName}
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          {links.map((link) => {
-            const isCurrent = location.pathname === link.href;
-            return (
-              <Link
-                key={link.id}
-                to={link.href}
-                className={
-                  isCurrent
-                    ? 'text-secondary font-semibold border-b-2 border-secondary pb-1 font-label-md text-label-md'
-                    : 'text-on-surface-variant font-medium hover:text-secondary transition-colors duration-300 font-label-md text-label-md'
-                }
+    <>
+      {isSearchOpen && (
+        <div
+          className="fixed inset-0 bg-transparent z-[45]"
+          onClick={() => {
+            setIsSearchOpen(false);
+            setSearchQuery('');
+          }}
+        />
+      )}
+      <header className="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+        <div
+          className={`flex items-center justify-between px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto transition-all duration-300 ${
+            isScrolled ? 'py-2' : 'py-4'
+          }`}
+        >
+          {isSearchOpen ? (
+            <div className="flex-1 flex items-center justify-between gap-4 h-10 relative">
+              {/* Search bar inside header */}
+              <div className="flex-1 flex items-center bg-surface-container-low border border-outline-variant/50 rounded-full px-4 py-1.5 focus-within:ring-2 focus-within:ring-secondary-container">
+                <Search className="text-outline-variant w-4 h-4 mr-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search legal guides, publications, or topics..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-on-surface font-body-md text-body-md py-1 placeholder:text-outline-variant/60 outline-none"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              <button
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery('');
+                }}
+                className="font-label-md text-label-md text-secondary hover:underline cursor-pointer py-1.5 shrink-0"
               >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
+                Cancel
+              </button>
 
-        <div className="flex items-center gap-6">
-          <IconButton icon={<Search className="w-5 h-5" />} label="Search" />
-          <Button variant="primary" size="sm" rounded="lg" onClick={handleSignInClick}>
-            Sign In
-          </Button>
+              {/* Header Dropdown Results */}
+              {searchQuery.trim() && (
+                <div className="absolute top-12 left-0 right-0 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl shadow-2xl p-4 z-[60] max-h-[400px] overflow-y-auto">
+                  <SearchDropdownResults query={searchQuery} books={allBooks} onItemClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery('');
+                  }} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/"
+                className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tight hover:opacity-90 transition-opacity"
+              >
+                {brandName}
+              </Link>
+
+              {/* Desktop nav */}
+              <nav className="hidden md:flex items-center gap-6 overflow-x-auto">
+                {navItems.map(({ label, href, key }) => {
+                  const isCurrent = isLoadingCats
+                    ? location.pathname === href
+                    : location.search.includes(`category=${slugify(label)}`);
+                  return (
+                    <Link
+                      key={key}
+                      to={href}
+                      className={
+                        isCurrent
+                          ? 'text-secondary font-semibold border-b-2 border-secondary pb-1 font-label-md text-label-md whitespace-nowrap'
+                          : 'text-on-surface-variant font-medium hover:text-secondary transition-colors duration-300 font-label-md text-label-md whitespace-nowrap'
+                      }
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+                <Link
+                  to="/books"
+                  className={`flex items-center gap-1 font-label-md text-label-md whitespace-nowrap transition-colors duration-300 ${
+                    location.pathname === '/books' && !location.search
+                      ? 'text-secondary font-semibold border-b-2 border-secondary pb-1'
+                      : 'text-secondary font-medium hover:text-secondary'
+                  }`}
+                >
+                  All <ChevronRight className="w-4 h-4" />
+                </Link>
+              </nav>
+
+              {/* Right actions */}
+              <div className="flex items-center gap-3 md:gap-6">
+                <IconButton icon={<Search className="w-5 h-5" />} label="Search" onClick={() => setIsSearchOpen(true)} />
+                <Button
+                  className="flex items-center gap-1 cursor-pointer"
+                  variant="primary"
+                  size="sm"
+                  rounded="lg"
+                  onClick={() => navigate('/checkout')}
+                >
+                  <span className="hidden sm:inline">Cart</span>
+                  <ShoppingCart size={18} />
+                </Button>
+                {/* Hamburger — mobile only */}
+                <button
+                  className="md:hidden p-1 text-on-surface-variant hover:text-secondary transition-colors"
+                  onClick={() => setMobileMenuOpen((prev) => !prev)}
+                  aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                >
+                  {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      </div>
-    </header>
+
+        {/* Mobile drawer */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-white/20 bg-surface-container-lowest/95 backdrop-blur-xl px-margin-mobile py-4 flex flex-col gap-1">
+            {navItems.map(({ label, href, key }) => {
+              const isCurrent = isLoadingCats
+                ? location.pathname === href
+                : location.search.includes(`category=${slugify(label)}`);
+              return (
+                <Link
+                  key={key}
+                  to={href}
+                  className={`py-2 font-label-md text-label-md transition-colors duration-200 ${
+                    isCurrent
+                      ? 'text-secondary font-semibold'
+                      : 'text-on-surface-variant font-medium hover:text-secondary'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+            <Link
+              to="/books"
+              className={`py-2 flex items-center gap-1 font-label-md text-label-md transition-colors duration-200 ${
+                location.pathname === '/books' && !location.search
+                  ? 'text-secondary font-semibold'
+                  : 'text-secondary font-medium hover:text-secondary'
+              }`}
+            >
+              All <ChevronRight className="w-4 h-4" />
+            </Link>
+          </nav>
+        )}
+      </header>
+    </>
   );
 }
 

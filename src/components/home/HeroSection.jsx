@@ -4,9 +4,9 @@ import { heroContent, trustMetrics } from '../../data/hero.js';
 
 function HeroSection({ content = heroContent, metrics = trustMetrics, onSearch }) {
   return (
-    <section className="relative min-h-[870px] flex items-center justify-center overflow-hidden bg-surface-container-low">
+    <section className="relative min-h-[600px] sm:min-h-[450px] md:min-h-[800px] flex items-center justify-center overflow-hidden bg-surface-container-low py-16 md:py-0">
       <div className="relative z-10 w-full max-w-[900px] px-margin-mobile text-center">
-        <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-8 leading-tight">
+        <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-6 md:mb-8 leading-tight">
           {content.headlineLines.map((line, index) => (
             <span key={line}>
               {line}
@@ -16,13 +16,13 @@ function HeroSection({ content = heroContent, metrics = trustMetrics, onSearch }
           ))}
         </h1>
 
-        <div className="relative max-w-3xl mx-auto mb-12">
+        <div className="relative max-w-3xl mx-auto mb-8 md:mb-12">
           <SearchBar
             placeholder={content.searchPlaceholder}
             ctaLabel={content.searchCtaLabel}
             onSearch={onSearch}
           />
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-2 sm:gap-3">
             <span className="text-label-sm text-outline uppercase tracking-wider">
               {content.trendingLabel}
             </span>

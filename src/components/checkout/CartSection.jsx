@@ -22,7 +22,7 @@ function CartSection({ items, onRemoveItem }) {
           <ShoppingBasket className="w-12 h-12 text-outline" />
           <p className="font-title-lg text-title-lg text-on-surface-variant">Your cart is empty</p>
           <a
-            href="/"
+            href="/books"
             className="font-label-md text-label-md text-secondary hover:underline"
           >
             Browse publications →

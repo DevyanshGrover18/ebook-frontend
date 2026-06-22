@@ -7,7 +7,7 @@ function NewReleases({ heading = newReleasesHeading, items = books, onQuickPrevi
     <section className="py-stack-xl bg-surface">
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
         <SectionHeader title={heading.title} variant="divider" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-gutter">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
           {items.map((book) => (
             <BookCard key={book.id} book={book} onQuickPreview={onQuickPreview} />
           ))}

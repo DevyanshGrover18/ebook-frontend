@@ -26,6 +26,15 @@ function BookDetailPage() {
   const [book, setBook] = useState(staticBook);
 
   useEffect(() => {
+    // Reset to the (possibly stale) static fallback for the new id right away,
+    // so navigating between books doesn't leave the previous book's content
+    // on screen while the API call is in flight — and reset the tab too.
+    setBook(staticBook);
+    setActiveTab('overview');
+
+    // Scroll to top whenever the page is showing a different book.
+    window.scrollTo(0, 0);
+
     booksService.getById(id)
       .then((data) => {
         if (data && data.id) {
@@ -35,7 +44,7 @@ function BookDetailPage() {
       .catch((err) => {
         console.warn('Backend book details not loaded, using local static fallback:', err.message);
       });
-  }, [id]);
+  }, [id, staticBook]);
 
   // Guard: unknown id → redirect home
   if (!book) {

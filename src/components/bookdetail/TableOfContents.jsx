@@ -14,7 +14,7 @@ function TableOfContents({ chapters }) {
         <h2 className="font-headline-sm text-headline-sm text-primary mb-8">Table of Contents</h2>
 
         <div className="border border-outline-variant/30 rounded-xl overflow-hidden divide-y divide-outline-variant/20">
-          {chapters.map((item, index) => (
+          {(chapters || []).map((item, index) => (
             <div
               key={item.chapter}
               className={`flex items-center gap-6 px-6 py-5 transition-colors duration-200 hover:bg-surface-container-low ${
