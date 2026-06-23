@@ -75,15 +75,6 @@ function OrderDetailModal({ order, onClose }) {
       </div>
 
       <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Shipping Address</p>
-        <div className="text-slate-300 text-sm bg-slate-900/40 border border-slate-700/60 rounded-xl p-4">
-          {addr.address ? (
-            <p>{formatAddress(addr)}</p>
-          ) : '—'}
-        </div>
-      </div>
-
-      <div>
         <p className="text-xs text-slate-500 uppercase tracking-wide mb-3">Items</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

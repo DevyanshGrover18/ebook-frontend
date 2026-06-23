@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header.jsx';
-import Footer from '../components/layout/Footer.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
 import TrustedByBar from '../components/home/TrustedByBar.jsx';
 import PracticeAreas from '../components/home/PracticeAreas.jsx';
 import NewReleases from '../components/home/NewReleases.jsx';
 import PremiumCTA from '../components/home/PremiumCTA.jsx';
+import BookRequestButton from '../components/home/BookRequestButton.jsx'
 
 import { trustedByLabel, trustedByLogos } from '../data/trustedBy.js';
 import { premiumCta } from '../data/premiumCta.js';
@@ -49,17 +48,13 @@ function HomePage() {
   };
 
   return (
-    <>
-      <Header />
-      <main className="pt-20">
-        <HeroSection onSearch={handleSearch} />
-        <TrustedByBar label={trustedByLabel} logos={trustedByLogos} />
-        <PracticeAreas items={categories} />
-        <NewReleases items={books} onQuickPreview={handleQuickPreview} />
-        <PremiumCTA content={premiumCta} />
-      </main>
-      <Footer />
-    </>
+    <main className="pt-20">
+      <HeroSection onSearch={handleSearch} />
+      <PracticeAreas items={categories} />
+      <NewReleases items={books} onQuickPreview={handleQuickPreview} />
+      <PremiumCTA content={premiumCta} />
+      <BookRequestButton/>
+    </main>
   );
 }
 

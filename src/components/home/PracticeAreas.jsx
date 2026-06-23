@@ -18,8 +18,8 @@ function PracticeAreas({ heading = defaultHeading, items = [] }) {
           ctaLabel={heading.ctaLabel}
           ctaHref={heading.ctaHref}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-gutter">
-          {items.map((category) => (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-gutter">
+          {items?.slice(0,6).map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
         </div>

@@ -27,11 +27,7 @@ function RelatedBookCard({ book }) {
             {badge}
           </div>
         )}
-        <div className="absolute inset-0 bg-primary/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="bg-white text-primary px-4 py-2 rounded-full font-label-md text-label-md shadow-lg flex items-center gap-2">
-            <Eye className="w-4 h-4" /> View Details
-          </span>
-        </div>
+        
       </div>
 
       <div className="px-2">
@@ -40,17 +36,7 @@ function RelatedBookCard({ book }) {
         <p className="text-label-md text-on-surface-variant mb-4">By {author}</p>
         <div className="flex justify-between items-center pt-4 border-t border-outline-variant/20">
           <span className="font-headline-sm text-headline-sm text-primary">₹{price.toFixed(2)}</span>
-          <button
-            type="button"
-            aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-            className={`inline-flex items-center justify-center cursor-pointer transition-colors rounded-full hover:text-secondary ${isBookmarked ? 'text-secondary' : 'text-on-surface-variant'}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsBookmarked((prev) => !prev);
-            }}
-          >
-            <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
-          </button>
+          
         </div>
       </div>
     </div>

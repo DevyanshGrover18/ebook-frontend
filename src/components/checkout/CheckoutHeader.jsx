@@ -1,17 +1,21 @@
-import { Lock } from 'lucide-react';
+import { Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 /**
  * Checkout-specific header — stripped-down, secure-session variant.
  * No navigation links; shows brand name + "Secure Session" + lock icon only.
  */
-function CheckoutHeader({ brandName = 'Lexis & Juris' }) {
+function CheckoutHeader({ brandName = "Lexis & Juris" }) {
   return (
     <header className="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4 flex items-center justify-between">
         {/* Brand */}
-        <div className="font-display-lg text-display-lg-mobile md:text-headline-md text-primary tracking-tight">
+        <Link
+          to="/"
+          className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary tracking-tight hover:opacity-90 transition-opacity"
+        >
           {brandName}
-        </div>
+        </Link>
 
         {/* Secure session indicator */}
         <div className="flex items-center gap-2">

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import CheckoutHeader from '../components/checkout/CheckoutHeader.jsx';
+import { useLocation, useNavigate } from 'react-router-dom';
 import CartSection from '../components/checkout/CartSection.jsx';
 import CustomerForm from '../components/checkout/CustomerForm.jsx';
 import OrderSummary from '../components/checkout/OrderSummary.jsx';
-import CheckoutFooter from '../components/checkout/CheckoutFooter.jsx';
 import { initialCartItems } from '../data/cart.js';
 import { useToast } from '../context/ToastContext.jsx';
 import { cartService, ordersService } from '../services/api.js';
@@ -18,6 +16,7 @@ import { discount, TAX_RATE } from '../data/cart.js';
  */
 function CheckoutPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const showToast = useToast();
   const [cartItems, setCartItems] = useState(initialCartItems);
   const [formData, setFormData] = useState({ fullName: '', email: '' });
@@ -156,7 +155,7 @@ function CheckoutPage() {
           payload.razorpaySignature = response.razorpay_signature;
 
           try {
-            await ordersService.create(payload);
+            const savedOrder = await ordersService.create(payload);
             if (!isBuyNow) {
               await cartService.clear(cartId).catch(() => {});
             }
@@ -164,9 +163,17 @@ function CheckoutPage() {
             setCartItems([]);
             setFormData({ fullName: '', email: '' });
             setSubmitAttempted(false);
+            
+            const orderWithImages = {
+              ...savedOrder,
+              items: payload.items
+            };
+
+            navigate(`/order-status?status=success&orderId=${savedOrder._id || savedOrder.id}`, { state: { order: orderWithImages } });
           } catch (err) {
             console.warn('Failed to save order to DB:', err.message);
             showToast('Payment successful, but failed to save order.', 'error');
+            navigate(`/order-status?status=failed&reason=db_error`);
           } finally {
             setIsSubmitting(false);
           }
@@ -185,6 +192,7 @@ function CheckoutPage() {
       rzp.on('payment.failed', function (response){
         showToast('Payment failed: ' + response.error.description, 'error');
         setIsSubmitting(false);
+        navigate(`/order-status?status=failed&reason=${encodeURIComponent(response.error.description)}&orderId=${response.error.metadata.order_id}`, { state: { order: payload } });
       });
 
       rzp.open();
@@ -198,51 +206,45 @@ function CheckoutPage() {
 
 
   return (
-    <>
-      <CheckoutHeader />
+    <main className="pt-24 pb-stack-xl max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
 
-      <main className="pt-24 pb-stack-xl max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-
-          {/* ── Left Column: Cart & Customer Info ── */}
-          <div className="lg:col-span-7 flex flex-col gap-stack-lg">
-            {/* Page header */}
-            <div>
-              <h1 className="font-headline-md text-headline-sm md:text-headline-md text-on-surface mb-2">
-                Review Your Order
-              </h1>
-              <p className="text-on-surface-variant font-body-md text-body-md">
-                Complete your purchase to gain immediate access to our legal repository.
-              </p>
-            </div>
-
-            {/* Cart items */}
-            <CartSection items={cartItems} onRemoveItem={handleRemoveItem} />
-
-            {/* Customer info form */}
-            <CustomerForm
-              formData={formData}
-              onChange={handleFormChange}
-              submitAttempted={submitAttempted}
-            />
+        {/* ── Left Column: Cart & Customer Info ── */}
+        <div className="lg:col-span-7 flex flex-col gap-stack-lg">
+          {/* Page header */}
+          <div>
+            <h1 className="font-headline-md text-headline-sm md:text-headline-md text-on-surface mb-2">
+              Review Your Order
+            </h1>
+            <p className="text-on-surface-variant font-body-md text-body-md">
+              Complete your purchase to gain immediate access to our legal repository.
+            </p>
           </div>
 
-          {/* ── Right Column: Sticky Order Summary ── */}
-          <div className="lg:col-span-5">
-            <OrderSummary
-              items={cartItems}
-              onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              selectedPayment={selectedPayment}
-              onPaymentChange={setSelectedPayment}
-            />
-          </div>
+          {/* Cart items */}
+          <CartSection items={cartItems} onRemoveItem={handleRemoveItem} />
 
+          {/* Customer info form */}
+          <CustomerForm
+            formData={formData}
+            onChange={handleFormChange}
+            submitAttempted={submitAttempted}
+          />
         </div>
-      </main>
 
-      <CheckoutFooter />
-    </>
+        {/* ── Right Column: Sticky Order Summary ── */}
+        <div className="lg:col-span-5">
+          <OrderSummary
+            items={cartItems}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            selectedPayment={selectedPayment}
+            onPaymentChange={setSelectedPayment}
+          />
+        </div>
+
+      </div>
+    </main>
   );
 }
 

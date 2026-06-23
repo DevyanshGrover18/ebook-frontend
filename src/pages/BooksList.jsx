@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Header from '../components/layout/Header.jsx';
-import Footer from '../components/layout/Footer.jsx';
 import BookCard from '../components/home/BookCard.jsx';
 import { books as staticBooks } from '../data/books.js';
 import { Search, Filter, RefreshCw, X } from 'lucide-react';
@@ -182,101 +180,95 @@ function BooksListPage() {
   );
 
   return (
-    <>
-      <Header />
+    <main className="pt-24 pb-stack-xl max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop min-h-[70vh]">
+      {/* Page Header */}
+      <div className="mb-8 text-center lg:text-left">
+        <h1 className="font-headline-md text-headline-sm md:text-headline-md text-primary mb-2">
+          The Legal Repository
+        </h1>
+        <p className="text-on-surface-variant font-body-lg text-body-lg max-w-2xl">
+          Explore authoritative legal guides, texts, and resources written by distinguished scholars and jurists.
+        </p>
+      </div>
 
-      <main className="pt-24 pb-stack-xl max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop min-h-[70vh]">
-        {/* Page Header */}
-        <div className="mb-8 text-center lg:text-left">
-          <h1 className="font-headline-md text-headline-sm md:text-headline-md text-primary mb-2">
-            The Legal Repository
-          </h1>
-          <p className="text-on-surface-variant font-body-lg text-body-lg max-w-2xl">
-            Explore authoritative legal guides, texts, and resources written by distinguished scholars and jurists.
-          </p>
-        </div>
-
-        {/* Mobile filter toggle bar */}
-        <div className="lg:hidden flex items-center justify-between mb-4">
-          <button
-            onClick={() => setFiltersOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant/30 bg-surface-container-low font-label-md text-label-md text-on-surface cursor-pointer"
-          >
-            <Filter className="w-4 h-4 text-secondary" />
-            Filters
-            {hasActiveFilters && (
-              <span className="bg-secondary text-on-secondary text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                !
-              </span>
-            )}
-          </button>
-          <span className="text-on-surface-variant font-label-sm text-label-sm">
-            {filteredAndSortedBooks.length} results
-          </span>
-        </div>
-
-        {/* Mobile filter drawer overlay */}
-        {filtersOpen && (
-          <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/40"
-            onClick={() => setFiltersOpen(false)}
-          />
-        )}
-
-        {/* Mobile filter drawer */}
-        <div
-          className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 max-w-[90vw] overflow-y-auto bg-surface p-4 shadow-xl transition-transform duration-300 ${
-            filtersOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+      {/* Mobile filter toggle bar */}
+      <div className="lg:hidden flex items-center justify-between mb-4">
+        <button
+          onClick={() => setFiltersOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant/30 bg-surface-container-low font-label-md text-label-md text-on-surface cursor-pointer"
         >
+          <Filter className="w-4 h-4 text-secondary" />
+          Filters
+          {hasActiveFilters && (
+            <span className="bg-secondary text-on-secondary text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+              !
+            </span>
+          )}
+        </button>
+        <span className="text-on-surface-variant font-label-sm text-label-sm">
+          {filteredAndSortedBooks.length} results
+        </span>
+      </div>
+
+      {/* Mobile filter drawer overlay */}
+      {filtersOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          onClick={() => setFiltersOpen(false)}
+        />
+      )}
+
+      {/* Mobile filter drawer */}
+      <div
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 max-w-[90vw] overflow-y-auto bg-surface p-4 shadow-xl transition-transform duration-300 ${
+          filtersOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {FilterPanel}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+        {/* Desktop filter sidebar */}
+        <aside className="hidden lg:block lg:col-span-3 sticky top-24">
           {FilterPanel}
-        </div>
+        </aside>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
-          {/* Desktop filter sidebar */}
-          <aside className="hidden lg:block lg:col-span-3 sticky top-24">
-            {FilterPanel}
-          </aside>
-
-          {/* Book grid */}
-          <section className="lg:col-span-9" aria-label="Book catalog">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary mb-4" />
-                <p className="font-title-lg text-title-lg text-on-surface-variant">Loading legal library...</p>
+        {/* Book grid */}
+        <section className="lg:col-span-9" aria-label="Book catalog">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary mb-4" />
+              <p className="font-title-lg text-title-lg text-on-surface-variant">Loading legal library...</p>
+            </div>
+          ) : filteredAndSortedBooks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-container-low border border-outline-variant/30 rounded-xl">
+              <Search className="w-12 h-12 text-outline mb-4" />
+              <h3 className="font-title-lg text-title-lg text-on-surface mb-2">No publications found</h3>
+              <p className="text-on-surface-variant font-body-md text-body-md mb-6 max-w-sm">
+                Try adjusting your search criteria or reset filters to explore our full legal repository.
+              </p>
+              <button
+                onClick={handleResetFilters}
+                className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity cursor-pointer shadow-lg"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="hidden lg:flex mb-4 items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider px-2">
+                <span>Showing {filteredAndSortedBooks.length} results</span>
               </div>
-            ) : filteredAndSortedBooks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-container-low border border-outline-variant/30 rounded-xl">
-                <Search className="w-12 h-12 text-outline mb-4" />
-                <h3 className="font-title-lg text-title-lg text-on-surface mb-2">No publications found</h3>
-                <p className="text-on-surface-variant font-body-md text-body-md mb-6 max-w-sm">
-                  Try adjusting your search criteria or reset filters to explore our full legal repository.
-                </p>
-                <button
-                  onClick={handleResetFilters}
-                  className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity cursor-pointer shadow-lg"
-                >
-                  Reset All Filters
-                </button>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-gutter">
+                {filteredAndSortedBooks.map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
               </div>
-            ) : (
-              <div>
-                <div className="hidden lg:flex mb-4 items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider px-2">
-                  <span>Showing {filteredAndSortedBooks.length} results</span>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-gutter">
-                  {filteredAndSortedBooks.map((book) => (
-                    <BookCard key={book.id} book={book} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
-
-      <Footer />
-    </>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
 

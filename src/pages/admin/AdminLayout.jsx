@@ -11,6 +11,7 @@ import {
   X,
   ChevronRight,
   ClipboardList,
+  ClockFading,
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/admin/categories', label: 'Categories', icon: Tag },
   { to: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList },
+  { to: '/admin/book-requests', label: 'Book Requests', icon: ClockFading },
 ];
 
 function AdminLayout() {

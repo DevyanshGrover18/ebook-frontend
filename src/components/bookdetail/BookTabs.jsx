@@ -21,7 +21,7 @@ function BookTabs({ activeTab, onTabChange, reviewCount }) {
                 aria-selected={isActive}
                 aria-controls={`tabpanel-${id}`}
                 onClick={() => onTabChange(id)}
-                className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-3.5 sm:py-4 text-label-md font-label-md whitespace-nowrap transition-all duration-200 border-b-2 -mb-px flex-1 sm:flex-none ${
+                className={`flex cursor-pointer items-center justify-center gap-1.5 px-4 sm:px-5 py-3.5 sm:py-4 text-label-md font-label-md whitespace-nowrap transition-all duration-200 border-b-2 -mb-px flex-1 sm:flex-none ${
                   isActive
                     ? 'border-secondary text-secondary'
                     : 'border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline-variant'

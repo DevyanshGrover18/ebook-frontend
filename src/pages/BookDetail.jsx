@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import Header from '../components/layout/Header.jsx';
-import Footer from '../components/layout/Footer.jsx';
 import BookHero from '../components/bookdetail/BookHero.jsx';
 import BookTabs from '../components/bookdetail/BookTabs.jsx';
 import AboutBook from '../components/bookdetail/AboutBook.jsx';
@@ -58,45 +56,41 @@ function BookDetailPage() {
 
 
   return (
-    <>
-      <Header />
-      <main className="pt-20">
+    <main className="pt-20">
 
-        {/* ── Hero: Cover + Purchase Panel ── */}
-        <BookHero book={book} />
+      {/* ── Hero: Cover + Purchase Panel ── */}
+      <BookHero book={book} />
 
-        {/* ── Sticky Tab Bar ── */}
-        <BookTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          reviewCount={book.reviews?.length}
-        />
+      {/* ── Sticky Tab Bar ── */}
+      <BookTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        reviewCount={book.reviews?.length}
+      />
 
-        {/* ── Tab Panels ── */}
-        <div className="bg-surface">
-          {activeTab === 'overview' && (
-            <AboutBook
-              description={book.description}
-              keyFeatures={book.keyFeatures}
-            />
-          )}
-          {activeTab === 'contents' && (
-            <TableOfContents chapters={book.tableOfContents} />
-          )}
-          {activeTab === 'reviews' && (
-            <ReviewsSection reviews={book.reviews} />
-          )}
-        </div>
+      {/* ── Tab Panels ── */}
+      <div className="bg-surface">
+        {activeTab === 'overview' && (
+          <AboutBook
+            description={book.description}
+            keyFeatures={book.keyFeatures}
+          />
+        )}
+        {activeTab === 'contents' && (
+          <TableOfContents chapters={book.tableOfContents} />
+        )}
+        {activeTab === 'reviews' && (
+          <ReviewsSection reviews={book.reviews} />
+        )}
+      </div>
 
-        {/* ── FAQ ── */}
-        <FAQSection />
+      {/* ── FAQ ── */}
+      <FAQSection />
 
-        {/* ── Related Books ── */}
-        <RelatedBooks books={relatedBooks} />
+      {/* ── Related Books ── */}
+      <RelatedBooks books={relatedBooks} />
 
-      </main>
-      <Footer />
-    </>
+    </main>
   );
 }
 
