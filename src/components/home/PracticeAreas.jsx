@@ -1,28 +1,41 @@
-import SectionHeader from '../common/SectionHeader.jsx';
+import { ArrowRight } from 'lucide-react';
 import CategoryCard from './CategoryCard.jsx';
 
-const defaultHeading = {
-  title: 'Practice Areas',
-  description: 'Curated collections for specialized legal mastery.',
-  ctaLabel: 'View All Categories',
-  ctaHref: '/books',
-};
+function PracticeAreas({ heading, items = [] }) {
+  const title = heading?.title ?? 'Browse Practice Areas';
+  const eyebrow = heading?.eyebrow ?? 'Specializations';
+  const ctaLabel = heading?.ctaLabel ?? 'Show All';
+  const ctaHref = heading?.ctaHref ?? '/books';
 
-function PracticeAreas({ heading = defaultHeading, items = [] }) {
   return (
-    <section className="py-stack-xl bg-surface-container-lowest">
+    <section className="py-stack-2xl bg-background">
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-        <SectionHeader
-          title={heading.title}
-          description={heading.description}
-          ctaLabel={heading.ctaLabel}
-          ctaHref={heading.ctaHref}
-        />
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-gutter">
-          {items?.slice(0,6).map((category) => (
+
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-10">
+          <div>
+            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">
+              {eyebrow}
+            </p>
+            <h2 className="font-headline-md text-headline-md text-primary">
+              {title}
+            </h2>
+          </div>
+          <a
+            href={ctaHref}
+            className="flex items-center gap-1 font-label-md text-label-md text-primary hover:gap-2 transition-all whitespace-nowrap mt-1"
+          >
+            {ctaLabel} <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        {/* Grid — 2 cols mobile, 4 cols md+ matching screenshot */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+          {items.slice(0, 8).map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
         </div>
+
       </div>
     </section>
   );

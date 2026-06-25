@@ -1,5 +1,5 @@
 export const newReleasesHeading = {
-  title: 'New Releases',
+  title: 'Trending Collections',
 };
 
 export const books = [

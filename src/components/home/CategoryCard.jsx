@@ -1,30 +1,24 @@
+import * as LucideIcons from 'lucide-react';
+import { Tag } from 'lucide-react';
+
 function CategoryCard({ category }) {
-  const { title, publicationsLabel, description, image, imageAlt, href } = category;
+  const Icon = LucideIcons[category.icon] ?? Tag;
+  const href = category.href ?? `/books?category=${category.id}`;
 
   return (
     <a
-      href={href || `/books?category=${title}`}
-      className="group relative h-[280px] sm:h-[340px] md:h-[400px] rounded-xl overflow-hidden cursor-pointer block"
+      href={href}
+      className="group flex flex-col items-center text-center bg-surface-container-lowest rounded-2xl p-8 hover:shadow-md transition-shadow duration-200"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-        style={{ backgroundImage: `url('${image}')` }}
-        role="img"
-        aria-label={imageAlt}
-      />
-      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
-        <span className="text-secondary-fixed text-label-sm font-bold uppercase tracking-widest mb-2 block truncate">
-          {publicationsLabel}
-        </span>
-        <h3 className="font-headline-sm text-headline-sm text-on-tertiary text-shadow-sm line-clamp-2 break-words">
-          {title}
-        </h3>
-        {/* Always visible on touch, hover-revealed on pointer devices */}
-        <p className="text-white/70 font-body-md text-body-md mt-2 [@media(hover:none)]:opacity-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-3 break-words">
-          {description}
-        </p>
+      {/* Icon badge */}
+      <div className="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-6 group-hover:bg-secondary-container transition-colors duration-200">
+        <Icon className="w-7 h-7 text-primary" strokeWidth={1.75} />
       </div>
+
+      {/* Title */}
+      <span className="font-title-lg text-title-lg text-primary leading-snug">
+        {category.title}
+      </span>
     </a>
   );
 }

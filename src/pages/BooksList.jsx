@@ -261,7 +261,7 @@ function BooksListPage() {
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-gutter">
                 {filteredAndSortedBooks.map((book) => (
-                  <BookCard key={book.id} book={book} />
+                  <BookCard key={book.id} variant='featured' book={book} />
                 ))}
               </div>
             </div>

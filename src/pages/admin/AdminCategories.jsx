@@ -1,17 +1,253 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Tag, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Tag, AlertCircle, CheckCircle, Search, X, Check } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { categoriesService } from '../../services/api.js';
 import AdminModal from '../../components/admin/AdminModal.jsx';
+
+// ─── Curated law & books icon set ───────────────────────────────────────────
+// Grouped by category for the default (non-search) view
+const ICON_GROUPS = [
+  {
+    label: 'Law & Justice',
+    icons: [
+      'Scale', 'Gavel', 'Landmark', 'Shield', 'ShieldCheck', 'ShieldAlert',
+      'ShieldBan', 'Lock', 'LockKeyhole', 'KeyRound', 'Key', 'Fingerprint',
+      'Stamp', 'FileSignature', 'Signature', 'BadgeCheck', 'Award', 'Medal',
+    ],
+  },
+  {
+    label: 'Books & Documents',
+    icons: [
+      'BookOpen', 'BookMarked', 'Book', 'BookCopy', 'BookText', 'BookUser',
+      'BookKey', 'BookLock', 'BookHeart', 'Books', 'ScrollText', 'Scroll',
+      'FileText', 'FileCheck', 'FileCheck2', 'FilePen', 'FileSearch',
+      'FileLock', 'Files', 'Newspaper', 'StickyNote', 'Receipt',
+    ],
+  },
+  {
+    label: 'Writing & Research',
+    icons: [
+      'PenLine', 'Pen', 'PenTool', 'NotebookPen', 'NotebookText', 'Notebook',
+      'ClipboardList', 'ClipboardCheck', 'ClipboardPen', 'Clipboard',
+      'Search', 'SearchCheck', 'Glasses', 'Microscope', 'Eye',
+      'Archive', 'ArchiveRestore', 'FolderOpen', 'FolderKanban',
+    ],
+  },
+  {
+    label: 'People & Organisations',
+    icons: [
+      'Handshake', 'HeartHandshake', 'Users', 'UserCheck', 'UserCog',
+      'UserRound', 'GraduationCap', 'Briefcase', 'BriefcaseBusiness',
+      'Building', 'Building2', 'Library', 'Globe', 'Globe2',
+    ],
+  },
+  {
+    label: 'Finance & Commerce',
+    icons: [
+      'DollarSign', 'Banknote', 'Coins', 'CreditCard', 'Wallet',
+      'TrendingUp', 'BarChart2', 'BarChart3', 'PieChart', 'LineChart',
+      'Tag', 'Tags', 'Receipt', 'Package',
+    ],
+  },
+  {
+    label: 'Communication',
+    icons: [
+      'Mail', 'MailOpen', 'MessageSquare', 'MessagesSquare', 'Send',
+      'Megaphone', 'Bell', 'BellRing', 'Radio', 'Rss', 'Info',
+      'AlertCircle', 'AlertTriangle', 'CheckCircle2', 'Calendar', 'CalendarCheck',
+    ],
+  },
+];
+
+// Flat list of all curated icons (for "all" tab)
+const ALL_CURATED = [...new Set(ICON_GROUPS.flatMap((g) => g.icons))];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getIcon(name) {
+  return LucideIcons[name] || LucideIcons['Tag'];
+}
+
+function CategoryIcon({ name, className = 'w-5 h-5' }) {
+  const Icon = getIcon(name);
+  return <Icon className={className} />;
+}
+
+// Build a full searchable list from the lucide-react namespace once
+const ALL_LUCIDE_NAMES = Object.keys(LucideIcons).filter(
+  (k) =>
+    typeof LucideIcons[k] === 'function' &&
+    k !== 'createLucideIcon' &&
+    /^[A-Z]/.test(k)
+);
+
+// ─── IconPicker ───────────────────────────────────────────────────────────────
+
+function IconPicker({ value, onChange }) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [activeGroup, setActiveGroup] = useState(0); // 0 = "All curated"
+  const ref = useRef(null);
+  const inputRef = useRef(null);
+
+  // When searching, show results from all lucide icons; otherwise show curated groups
+  const isSearching = query.trim().length > 0;
+
+  const searchResults = useMemo(() => {
+    if (!isSearching) return [];
+    const q = query.toLowerCase();
+    return ALL_LUCIDE_NAMES.filter((n) => n.toLowerCase().includes(q)).slice(0, 120);
+  }, [query, isSearching]);
+
+  const curatedGroupIcons = useMemo(() => {
+    if (activeGroup === 0) return ALL_CURATED;
+    return ICON_GROUPS[activeGroup - 1]?.icons ?? [];
+  }, [activeGroup]);
+
+  const displayIcons = isSearching ? searchResults : curatedGroupIcons;
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [open]);
+
+  const SelectedIcon = getIcon(value);
+
+  return (
+    <div className="relative" ref={ref}>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="admin-input flex items-center gap-3 cursor-pointer hover:border-amber-400/50 transition-colors text-left w-full"
+      >
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 shrink-0">
+          <SelectedIcon className="w-4 h-4" />
+        </span>
+        <span className="text-slate-300 text-sm flex-1 truncate">{value || 'Select icon…'}</span>
+        <Search className="w-4 h-4 text-slate-500 shrink-0" />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute z-50 mt-2 w-full min-w-[340px] rounded-xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '420px' }}>
+
+          {/* Search bar */}
+          <div className="p-3 border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2">
+              <Search className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search all 1600+ Lucide icons…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none flex-1 min-w-0"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery('')}>
+                  <X className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Group tabs — hidden while searching */}
+          {!isSearching && (
+            <div className="flex gap-1 px-3 pt-2 pb-1 overflow-x-auto shrink-0 scrollbar-none">
+              {['All', ...ICON_GROUPS.map((g) => g.label)].map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setActiveGroup(i)}
+                  className={`text-xs px-2.5 py-1 rounded-md whitespace-nowrap transition-colors shrink-0
+                    ${activeGroup === i
+                      ? 'bg-amber-400/15 text-amber-400 font-medium'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Icon grid */}
+          <div className="overflow-y-auto flex-1 p-3">
+            {displayIcons.length === 0 ? (
+              <p className="text-center text-slate-500 text-xs py-6">
+                No icons match "{query}"
+              </p>
+            ) : (
+              <div className="grid grid-cols-8 gap-1">
+                {displayIcons.map((name) => {
+                  const Icon = getIcon(name);
+                  const isSelected = value === name;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      title={name}
+                      onClick={() => { onChange(name); setOpen(false); setQuery(''); }}
+                      className={`
+                        relative flex items-center justify-center w-full aspect-square rounded-lg transition-all
+                        ${isSelected
+                          ? 'bg-amber-400/20 text-amber-400 ring-1 ring-amber-400/50'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}
+                      `}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {isSelected && (
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full flex items-center justify-center">
+                          <Check className="w-2 h-2 text-slate-900" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-3 py-2 border-t border-slate-800 flex items-center justify-between shrink-0">
+            <span className="text-xs text-slate-600">
+              {isSearching
+                ? `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} across all icons`
+                : `${displayIcons.length} icons`}
+            </span>
+            {value && (
+              <span className="text-xs text-amber-400/70 flex items-center gap-1">
+                <CategoryIcon name={value} className="w-3 h-3" />
+                {value}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Form defaults ────────────────────────────────────────────────────────────
 
 const emptyForm = {
   id: '',
   title: '',
   publicationsLabel: '',
   description: '',
-  image: '',
-  imageFile: null,
+  icon: 'Scale',
   imageAlt: '',
 };
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
 
 function Toast({ message, type }) {
   if (!message) return null;
@@ -22,6 +258,8 @@ function Toast({ message, type }) {
     </div>
   );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -42,7 +280,7 @@ function AdminCategories() {
     try {
       const data = await categoriesService.getAll();
       setCategories(Array.isArray(data) ? data : []);
-    } catch (e) {
+    } catch {
       showToast('Failed to load categories', 'error');
     } finally {
       setLoading(false);
@@ -62,9 +300,7 @@ function AdminCategories() {
       title: cat.title || '',
       publicationsLabel: cat.publicationsLabel || '',
       description: cat.description || '',
-      image: cat.image || '',
-      imageFile: null,
-      imageAlt: cat.imageAlt || '',
+      icon: cat.icon || 'Scale',
     });
     setModal({ open: true, mode: 'edit', docId: cat._id, catId: cat.id });
   };
@@ -74,25 +310,12 @@ function AdminCategories() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
-    const formData = new FormData();
-    Object.keys(form).forEach(key => {
-      if (['image', 'imageFile'].includes(key)) return;
-      formData.append(key, form[key]);
-    });
-    
-    if (form.imageFile) {
-      formData.append('image', form.imageFile);
-    } else {
-      formData.append('image', form.image);
-    }
-
     try {
       if (modal.mode === 'create') {
-        await categoriesService.create(formData);
+        await categoriesService.create({ ...form });
         showToast('Category created successfully');
       } else {
-        await categoriesService.update(modal.catId, formData);
+        await categoriesService.update(modal.catId, { ...form });
         showToast('Category updated successfully');
       }
       setModal({ open: false });
@@ -164,9 +387,9 @@ function AdminCategories() {
                   <td className="font-mono text-xs text-slate-500">{cat.id}</td>
                   <td>
                     <div className="flex items-center gap-3">
-                      {cat.image && (
-                        <img src={cat.image} alt={cat.imageAlt || cat.title} className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                      )}
+                      <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-amber-400/10 text-amber-400 shrink-0">
+                        <CategoryIcon name={cat.icon} className="w-4 h-4" />
+                      </span>
                       <span className="text-white font-medium">{cat.title}</span>
                     </div>
                   </td>
@@ -190,8 +413,7 @@ function AdminCategories() {
                       >
                         {deleting === cat._id
                           ? <span className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin block" />
-                          : <Trash2 className="w-4 h-4" />
-                        }
+                          : <Trash2 className="w-4 h-4" />}
                       </button>
                     </div>
                   </td>
@@ -228,70 +450,11 @@ function AdminCategories() {
             <textarea name="description" value={form.description} onChange={handleChange} required rows={2} placeholder="Short description…" className="admin-input resize-none" />
           </div>
           <div>
-            <label className="admin-label">Category Image</label>
-            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-700 hover:border-amber-400/50 rounded-xl p-6 cursor-pointer transition-colors group">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) =>
-                  setForm({ ...form, imageFile: e.target.files[0] })
-                }
-              />
-              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-amber-400/10 transition-colors">
-                <Plus className="w-5 h-5 text-slate-400 group-hover:text-amber-400" />
-              </div>
-              <p className="text-sm text-slate-400 group-hover:text-slate-300">
-                Click to upload category image
-              </p>
-              <p className="text-xs text-slate-600">PNG, JPG, WEBP</p>
-            </label>
-
-            {(form.imageFile || form.image) && (
-              <div className="mt-3 flex items-start gap-3">
-                <div className="relative shrink-0">
-                  <img
-                    src={
-                      form.imageFile
-                        ? URL.createObjectURL(form.imageFile)
-                        : form.image
-                    }
-                    alt="Preview"
-                    className="w-20 h-28 rounded-lg object-cover border border-slate-700"
-                    onError={(e) => (e.target.style.display = "none")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm({ ...form, imageFile: null, image: "" })
-                    }
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-400 text-white rounded-full p-1 transition-colors"
-                    aria-label="Remove image"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-                <div className="pt-1">
-                  <p className="text-xs font-medium text-slate-300">
-                    {form.imageFile ? form.imageFile.name : "Current image"}
-                  </p>
-                  {form.imageFile && (
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {(form.imageFile.size / 1024).toFixed(0)} KB
-                    </p>
-                  )}
-                  {!form.imageFile && form.image && (
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Leave empty to keep
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="admin-label">Image Alt Text</label>
-            <input name="imageAlt" value={form.imageAlt} onChange={handleChange} placeholder="Descriptive alt text for the image" className="admin-input" />
+            <label className="admin-label">Category Icon</label>
+            <IconPicker value={form.icon} onChange={(name) => setForm((f) => ({ ...f, icon: name }))} />
+            <p className="mt-1.5 text-xs text-slate-500">
+              Browse curated law & books icons, or search all 1600+ Lucide icons.
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

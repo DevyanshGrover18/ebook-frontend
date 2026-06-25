@@ -11,9 +11,13 @@ import { trustedByLabel, trustedByLogos } from '../data/trustedBy.js';
 import { premiumCta } from '../data/premiumCta.js';
 import { books as staticBooks } from '../data/books.js';
 import { booksService, categoriesService } from '../services/api.js';
+import TrustMetrics from '../components/home/TrustMetrics.jsx';
+import StaffPicks from '../components/home/StaffPicks.jsx';
+import WhyChooseUs from '../components/home/WhyChooseUs.jsx';
+import TestimonialStats from '../components/home/Testimonials.jsx';
 
 function HomePage() {
-  const [books, setBooks] = useState(staticBooks);
+  const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
@@ -22,9 +26,13 @@ function HomePage() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setBooks(data);
+        } else {
+          setBooks(staticBooks);
+          console.warn('Backend books returned no records, using local seed fallback.');
         }
       })
       .catch((err) => {
+        setBooks(staticBooks);
         console.warn('Backend books not loaded, using local seed fallback:', err.message);
       });
 
@@ -50,9 +58,12 @@ function HomePage() {
   return (
     <main className="pt-20">
       <HeroSection onSearch={handleSearch} />
+      <TrustMetrics/>
       <PracticeAreas items={categories} />
       <NewReleases items={books} onQuickPreview={handleQuickPreview} />
-      <PremiumCTA content={premiumCta} />
+      <StaffPicks/>
+      <WhyChooseUs/>
+      <TestimonialStats/>
       <BookRequestButton/>
     </main>
   );

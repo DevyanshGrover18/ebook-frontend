@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Button from '../common/Button.jsx';
 import { Search } from 'lucide-react';
 import { booksService } from '../../services/api.js';
@@ -9,67 +10,97 @@ function SearchBar({ placeholder, ctaLabel = 'Search', onSearch }) {
   const [query, setQuery] = useState('');
   const [allBooks, setAllBooks] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
+  const formRef = useRef(null);
+  const [dropdownStyle, setDropdownStyle] = useState({});
 
   useEffect(() => {
     booksService.getAll()
-      .then((data) => {
-        if (Array.isArray(data)) setAllBooks(data);
-      })
-      .catch((err) => {
-        console.warn('SearchBar books fetch failed, using local offline seed:', err.message);
-        setAllBooks(staticBooks);
-      });
+      .then((data) => { if (Array.isArray(data)) setAllBooks(data); })
+      .catch(() => setAllBooks(staticBooks));
   }, []);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  // Recalculate dropdown position whenever it opens or window resizes
+  useEffect(() => {
+    if (!isFocused || !query.trim()) return;
+
+    const reposition = () => {
+      if (!formRef.current) return;
+      const rect = formRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+      });
+    };
+
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+    };
+  }, [isFocused, query]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
     setIsFocused(false);
     onSearch?.(query);
   };
 
+  const showDropdown = isFocused && query.trim();
+
   return (
     <div className="relative w-full text-left">
-      {/* Click outside overlay specifically for the SearchBar's dropdown */}
-      {isFocused && query.trim() && (
+      {/* Backdrop to close on outside click */}
+      {showDropdown && (
         <div
-          className="fixed inset-0 bg-transparent z-40"
+          className="fixed inset-0 z-[9998]"
           onClick={() => setIsFocused(false)}
         />
       )}
-      
+
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
-        className="relative z-50 bg-white/80 backdrop-blur-xl border border-white/30 rounded-full shadow-xl flex items-center p-1.5 sm:p-2 pl-4 sm:pl-6 transition-transform duration-300 focus-within:scale-[1.02] focus-within:ring-2 focus-within:ring-secondary-container"
+        className="relative z-50 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl shadow-xl flex items-center p-1.5 sm:p-2 pl-4 sm:pl-6 transition-colors duration-300 focus-within:bg-white/15 focus-within:border-white/25"
       >
-        <Search className="text-outline mr-2 sm:mr-4 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+        <Search className="text-white/50 mr-2 sm:mr-3 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
         <input
           type="text"
           value={query}
           onFocus={() => setIsFocused(true)}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setIsFocused(true);
-          }}
+          onChange={(e) => { setQuery(e.target.value); setIsFocused(true); }}
           placeholder={placeholder}
-          className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-on-surface font-body-md text-body-md py-2 sm:py-3 placeholder:text-outline-variant text-sm sm:text-base outline-none"
+          className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-white font-['Work_Sans'] text-sm sm:text-base leading-[24px] py-2 sm:py-2.5 placeholder:text-white/40 outline-none"
         />
-        <Button type="submit" variant="primary" rounded="full" size="sm" className="ml-1.5 sm:ml-2 shadow-md shrink-0">
-          <span className="hidden sm:inline">{ctaLabel}</span>
+        <Button
+          type="submit"
+          variant="primary"
+          rounded="lg"
+          size="sm"
+          className="ml-1.5 sm:ml-2 shrink-0 normal-case font-medium tracking-normal"
+        >
           <Search className="sm:hidden w-4 h-4" />
+          <span className="hidden sm:inline">{ctaLabel}</span>
         </Button>
       </form>
 
-      {isFocused && query.trim() && (
-        <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-50 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl shadow-2xl p-4 max-h-[350px] overflow-y-auto">
+      {/* Portal dropdown — renders at document.body, escaping all stacking contexts */}
+      {showDropdown && createPortal(
+        <div
+          style={dropdownStyle}
+          className="bg-white border border-outline-variant/50 rounded-2xl shadow-2xl p-4 max-h-[350px] overflow-y-auto text-primary"
+        >
           <SearchDropdownResults
             query={query}
             books={allBooks}
-            onItemClick={() => {
-              setIsFocused(false);
-              setQuery('');
-            }}
+            onItemClick={() => { setIsFocused(false); setQuery(''); }}
           />
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
